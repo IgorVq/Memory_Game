@@ -9,13 +9,16 @@ function generateBoard(size) {
         for (let i = 0; i < 8; i++) {
             console.log("Generating small board cell:", i);
             boardData[i] = {};
-            boardData[i].id = i;
             boardData[i].value = emojis[i];
             boardData[i].isFlipped = false;
             boardData[i].isMatched = false;
         }
     }
-    const boardDataDuplicated = [...boardData, ...boardData];
+    const boardDataDuplicated = boardData.flatMap((cell, i) => ([
+        { ...cell, id: i * 2 },
+        { ...cell, id: i * 2 + 1 },
+    ]));
+    console.log("Duplicated Board Data:", boardDataDuplicated);
     const shuffledBoardData = shuffle(boardDataDuplicated);
     console.log("Shuffled Board Data:", shuffledBoardData);
     return shuffledBoardData;
