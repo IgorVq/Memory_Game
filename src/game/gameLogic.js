@@ -1,6 +1,6 @@
-function revealCard(board, id) {
-    document.getElementById('board').children[id].classList.remove('is-hidden');
+function userClick(board, id, index) {
+    document.getElementById('board').children[index].classList.remove('is-hidden');
     board[id].isFlipped = true;
 }
 
-export { revealCard };
+export { userClick };

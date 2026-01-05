@@ -1,5 +1,5 @@
 import { shuffle } from "../utils/shuffle.js";
-import { revealCard } from "../game/gameLogic.js";
+import { userClick } from "../game/gameLogic.js";
 
 const emojis = [ "👍", "🌈", "❤️", "⚠️", "🚚", "🏞️", "🥑", "🍎", "🎯", "👀", "☀️", "🧠"];
 
@@ -29,7 +29,7 @@ function generateBoardUI(BoardData) {
         cell.innerHTML = cellData.value;
         cell.className = `card is-hidden`;
         cell.dataset.index = cellData.id;
-        cell.addEventListener('click', () => {revealCard(BoardData, cellData.id)});
+        cell.addEventListener('click', () => {userClick(BoardData, cellData.id, index);});
         boardElement.appendChild(cell);
     });
 }
