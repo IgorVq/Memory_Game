@@ -1,26 +1,36 @@
 #board {
     display: grid;
-    grid-template-columns: repeat(4, 60px);
-    grid-gap: 2px;
+    grid-template-columns: repeat(4, 80px);
+    gap: 12px;
     margin: 20px auto;
+    width: max-content;
+}
+
+#board.no-click {
+    pointer-events: none;
 }
 
 #board .card {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
     border: 1px solid #000;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 48px;
+    border-radius: 12px;
+}
+
+#board .card.is-matched {
+    outline: 2px solid rgb(0, 219, 0);
 }
 
 .card.is-hidden::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: #222;          /* dos de carte */
+  background: grey;          /* dos de carte */
   border-radius: inherit;
   pointer-events: none;       /* le clic passe à travers */
 }
