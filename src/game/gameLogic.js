@@ -1,109 +1,75 @@
-const flippedCards = [];
-let timerId = null;
-let elapsedSeconds = 0;
-const modalElement = document.getElementById('gameOverModal');
-const finalMoveCountElement = document.getElementById('finalMoveCount');
-const finalTimeElement = document.getElementById('finalTime');
-const replayButton = document.getElementById('replayButton');
+import { EMOJIS } from "./gameConfig.js";
+import { createGameState } from "./gameState.js";
+import { shuffle } from "../utils/shuffle.js";
 
-if (replayButton) {
-    replayButton.addEventListener('click', () => {
-        window.location.reload();
+function createCards(pairCount) {
+    const available = EMOJIS.slice(0, pairCount);
+    const cards = available.flatMap((value, index) => ([
+        { id: index * 2, value, isFlipped: false, isMatched: false },
+        { id: index * 2 + 1, value, isFlipped: false, isMatched: false },
+    ]));
+    return shuffle(cards);
+}
+
+function startGame(pairCount) {
+    return createGameState(createCards(pairCount));
+}
+
+function canFlipCard(state, index) {
+    const card = state.cards[index];
+    if (!card || card.isMatched || card.isFlipped) {
+        return false;
+    }
+    if (state.flippedCards.length >= 2) {
+        return false;
+    }
+    return true;
+}
+
+function flipCard(state, index) {
+    if (!canFlipCard(state, index)) {
+        return false;
+    }
+    state.cards[index].isFlipped = true;
+    state.flippedCards.push(index);
+    return true;
+}
+
+function evaluateFlipped(state) {
+    if (state.flippedCards.length < 2) {
+        return null;
+    }
+    const [firstIndex, secondIndex] = state.flippedCards;
+    state.moves += 1;
+    const firstCard = state.cards[firstIndex];
+    const secondCard = state.cards[secondIndex];
+    if (firstCard.value === secondCard.value) {
+        firstCard.isMatched = true;
+        secondCard.isMatched = true;
+        state.flippedCards = [];
+        return {
+            type: "match",
+            indices: [firstIndex, secondIndex],
+            moves: state.moves,
+            isFinished: isGameFinished(state),
+        };
+    }
+    return {
+        type: "mismatch",
+        indices: [firstIndex, secondIndex],
+        moves: state.moves,
+    };
+}
+
+function concealMismatched(state, indices) {
+    indices.forEach((index) => {
+        state.cards[index].isFlipped = false;
     });
+    state.flippedCards = [];
 }
 
-function formatTime(totalSeconds) {
-    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-    return `${minutes}:${seconds}`;
+function isGameFinished(state) {
+    return state.cards.every((card) => card.isMatched);
 }
 
-function updateTimerDisplay() {
-    const timerElement = document.getElementById('timer');
-    if (timerElement) {
-        timerElement.textContent = formatTime(elapsedSeconds);
-    }
-}
-
-function startTimer() {
-    if (timerId) return;
-    timerId = setInterval(() => {
-        elapsedSeconds += 1;
-        updateTimerDisplay();
-    }, 1000);
-}
-
-function stopTimer() {
-    if (!timerId) return;
-    clearInterval(timerId);
-    timerId = null;
-}
-
-function isGameFinished(board) {
-    const allMatched = board.every(cell => cell.isMatched);
-    if (allMatched) {
-        console.log("Game finished! All cards matched.");
-        stopTimer();
-        const moveCountElement = document.getElementById('moveCount');
-        if (finalMoveCountElement && moveCountElement) {
-            finalMoveCountElement.textContent = moveCountElement.textContent;
-        }
-        if (finalTimeElement) {
-            finalTimeElement.textContent = formatTime(elapsedSeconds);
-        }
-        if (modalElement) {
-            setTimeout(() => {
-                modalElement.classList.remove('hidden');
-            }, 400);
-        }
-    }
-}
-
-function userClick(board, id, index) {
-    if (document.getElementById('board').children[index].classList.contains('is-flipped')) {
-        console.log("Card already flipped:", id);
-        return;
-    }
-    if (flippedCards.length === 0) {
-        startTimer();
-    }
-    if (flippedCards.length < 2) {
-        flippedCards.push({ id, index });
-        document.getElementById('board').children[index].classList.add('is-flipped');
-        document.getElementById('board').children[index].classList.remove('is-hidden');
-        board[index].isFlipped = true;
-        console.log("Card flipped:", id);
-    }
-    if (flippedCards.length === 2) {
-        const [firstCard, secondCard] = flippedCards;
-        document.getElementById('moveCount').textContent = parseInt(document.getElementById('moveCount').textContent) + 1;
-        console.log(board[firstCard.index].value);
-        console.log(board[secondCard.index].value);
-        if (board[firstCard.index].value === board[secondCard.index].value) {
-            console.log("Cards matched:", firstCard.id, secondCard.id);
-            board[firstCard.index].isMatched = true;
-            board[secondCard.index].isMatched = true;
-            document.getElementById('board').children[firstCard.index].classList.remove('is-flipped');
-            document.getElementById('board').children[firstCard.index].classList.add('is-matched');
-            document.getElementById('board').children[secondCard.index].classList.remove('is-flipped');
-            document.getElementById('board').children[secondCard.index].classList.add('is-matched');
-
-        } else {
-            console.log("Cards did not match:", firstCard.id, secondCard.id);
-            document.getElementById('board').classList.add('no-click');
-            setTimeout(() => {
-                document.getElementById('board').children[firstCard.index].classList.remove('is-flipped');
-                document.getElementById('board').children[firstCard.index].classList.add('is-hidden');
-                document.getElementById('board').children[secondCard.index].classList.remove('is-flipped');
-                document.getElementById('board').children[secondCard.index].classList.add('is-hidden');
-                board[firstCard.index].isFlipped = false;
-                board[secondCard.index].isFlipped = false;
-                document.getElementById('board').classList.remove('no-click');
-            }, 1000);
-        }
-        flippedCards.length = 0;
-    }
-    isGameFinished(board);
-}
-
-export { userClick };
+export { startGame, flipCard, evaluateFlipped, concealMismatched, isGameFinished };
